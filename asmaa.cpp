@@ -4,15 +4,6 @@
 using namespace std;
 
 
-bool isGreyCode(string x, string y){
-    int numberOfDifferentBits = 0;
-    for(int i  = 0; i < x.length(); i++){
-        if(x[i] != y[i]) numberOfDifferentBits++;
-    }
-    if (numberOfDifferentBits == 1) return true;
-    else return false;
-}
-
 void createFirstColumn(vector<string> minterms, vector<string> dontcares){
     
     int onesCount = 0;
