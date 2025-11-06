@@ -34,13 +34,15 @@ PI::PI(int s,string v1,string v2){
 
 PI::~PI(){
   //  for(string s:num) //this is just to ensure that the number in the vector are right
-    //    cout<<s<<endl;
+    //    cout<<"Minterms:"<<s<<endl;
+    
     num.clear();
 }
 
 void PI::convert_num_to_binary(string n,bool DNC){
     if(DNC){
         doNotCares.push_back(stoi(n));//if do not care add it to the do not care vector
+        return;
     }
     
     vector <int> rem;//this will store the remainders
@@ -87,4 +89,45 @@ void PI::convert_max_to_min(string line){
         if(it1==max.end() && it2==doNotCares.end()) //if the number does not exist in maxterm or do not care then it is a minterm
         {convert_num_to_binary(to_string(i),false);}
     }
+}
+
+vector <string> PI::find_EPI(vector <string> primeImplicants){
+    vector<vector<string>> chart (primeImplicants.size(),vector<string>(num.size(),"0"));
+    for(int i=0;i<primeImplicants.size();i++){
+        chart[i][0]=primeImplicants[i];//we created the rows of the coverage chart
+        
+        for(int j=0;j<num.size();j++){
+            string s=num[j];
+            auto it2 =find(doNotCares.begin(), doNotCares.end(), stoi(s));
+            if(it2==doNotCares.end()){
+                chart[0][j]=s;
+            }
+        } //we created the columns as well
+    }//full coverage chart created and initialized to zero
+    
+    for(int i=1;i<chart.size();i++){
+        int comp=0;
+        for(int j=1;j<chart[0].size();j++){
+            for(int k=0;k<4;k++){
+                if(chart[0][j].substr(k,k+1)==chart[i][0].substr(k,k+1)){
+                    comp++;
+                }
+            }
+            if(comp==2){
+                chart[i][j]="1";
+            }
+        }
+    }//this part marks the minterms covered with 1
+    
+    for(int i=1;i<chart.size();i++){
+        int count=0;
+        for(int j=1;j<chart[0].size();j++){
+            if(chart[i][j]=="1"){
+                count++;}
+        }
+        if(count==1){
+            EPI.push_back(chart[i][0]);}
+    }//this tries to find the EPI which is a minterm is covered exactly once
+    
+    return EPI;
 }
