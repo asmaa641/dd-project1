@@ -25,5 +25,9 @@ public:
     void convert_max_to_min(string line);//function that converts the maxterms into minterms
     vector <string> find_EPI();//function that finds EPI and returns them in as strings
     ~QM();//destructor
+    void createFirstColumn(vector<vector<string>>& groups);
+    vector<string> combineMinterms(string term1, string term2);
+    vector<string> generatePrimeImplicants();
+
 };
 #endif

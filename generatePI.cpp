@@ -126,5 +126,18 @@ vector<string> generatePI::generatePrimeImplicants(vector<string>& minterms, vec
         groups = newGroups;
     }
 
-    return primeImplicants;
+    // before returning lets check for duplicate terms
+    vector<string> PIs;
+    for (int i = 0; i < primeImplicants.size(); ++i) {
+    bool exists = false;
+        for (int j = 0; j < PIs.size(); ++j) {
+            if (PIs[j] == primeImplicants[i]) { 
+                exists = true; 
+            }
+    }
+    if (!exists) PIs.push_back(primeImplicants[i]);
+}
+return PIs;
+
+    
 }
