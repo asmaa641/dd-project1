@@ -24,11 +24,17 @@ private:
     void generateSolutions();//function that finds all the solutions and stores them as strings
     void convert_max_to_min(string line);//function that converts maxterms into minterms
     bool isCovered(const string& minterm, const string& pi);
+    vector<string> generatePrimeImplicants();
+    void createFirstColumn(vector<vector<string>>& groups);
+    vector<string> combineMinterms(string term1, string term2);
+
 
 public:
     QM(int s,string v1,string v2);//constructor that takes the number of inputs, minterms, and do not cares calls function to convert the numbers to binary
     ~QM();//destructor
     void displayEPI() const;
     void displaySolutions() const;
+
+    
 };
 #endif
