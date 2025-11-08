@@ -11,7 +11,7 @@ using namespace std;
 
 int main() {
     ifstream file;
-    file.open("/Users/jojo/Downloads/4_input_somePI_are_EPI.txt");
+    file.open("/Users/jojo/Downloads/4_input_allPI_are_EPI.txt");
     
     if (!file.is_open()) { //to ensure the file opens
             cout << "Error: Unable to open file!" << endl;
