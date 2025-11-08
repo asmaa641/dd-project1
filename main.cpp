@@ -41,8 +41,8 @@ int main(int argc, const char * argv[]) {
          PI colum1(stoi(line1),line2,line3);
     file.close();
 
-    vector<string> minterms  = {"000", "001", "011", "111"};
-    vector<string> dontcares = {"010"};  // try {} if you have none
+      vector<string> minterms  = {"0100", "0101", "0110","1000","1001","1101"};
+    vector<string> dontcares = {"0000", "0111","1111"};  // checking if generate pi works
 
     generatePI gen;
     vector<string> PIs = gen.generatePrimeImplicants(minterms, dontcares);
@@ -51,6 +51,7 @@ int main(int argc, const char * argv[]) {
     for (size_t i = 0; i < PIs.size(); ++i) {
         cout << "  " << PIs[i] << '\n';
     }
+
 
     return 0;
 }
