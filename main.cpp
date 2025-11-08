@@ -1,18 +1,15 @@
 //
 //  main.cpp
-//  DD_proj1
+//  Project 1
 //
-//  Created by Jumanah Moussa on 04/11/2025.
+//  Created by Jumanah Moussa on 08/11/2025.
 //
-
-#include <iostream>
 #include <fstream>
-#include <vector>
-#include "PI.h"
-#include "generatePI.h"
+#include <iostream>
+#include "QM.h"
 using namespace std;
 
-int main(int argc, const char * argv[]) {
+int main() {
     ifstream file;
     file.open("/Users/jojo/Downloads/4_input_somePI_are_EPI.txt");
     
@@ -38,20 +35,9 @@ int main(int argc, const char * argv[]) {
         return 1;
     }//these three conditions ensure that the file is written in the right format
     
-         PI colum1(stoi(line1),line2,line3);
+         QM trial(stoi(line1),line2,line3);
+        
+
     file.close();
-
-      vector<string> minterms  = {"0100", "0101", "0110","1000","1001","1101"};
-    vector<string> dontcares = {"0000", "0111","1111"};  // checking if generate pi works
-
-    generatePI gen;
-    vector<string> PIs = gen.generatePrimeImplicants(minterms, dontcares);
-
-    cout << "Prime Implicants (" << PIs.size() << "):\n";
-    for (size_t i = 0; i < PIs.size(); ++i) {
-        cout << "  " << PIs[i] << '\n';
-    }
-
-
     return 0;
 }
