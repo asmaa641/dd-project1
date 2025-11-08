@@ -6,29 +6,39 @@
 //
 #include "QM.h"
 #include <sstream>
+#include <iostream>
+#include <vector>
 #include <cmath>
+#include <algorithm>
+#include <bitset>
 
+using namespace std;
 
-
-QM::QM(int s,string v1,string v2){
-    size=s;
+QM::QM(int s,string v1,string v2):size(s),minterms(),doNotCares(),PI(),EPI(),solutions(){
     string m;
     m=v1.substr(0,1);
     stringstream line1(v1),line2(v2);//I am using stringstream so I can use getline
     string value;
     
+    while(getline(line2,value,','))
+    {  
+        value.erase(remove(value.begin(), value.end(), ' '), value.end()); // remove all spaces in do not cares
+        value = bitset<20>(stoi(value.substr(1))).to_string().substr(20 - size); // convert to binary with leading zeros
+        doNotCares.push_back(value);
+    }
+
     if(m=="m"){//if it is minterm
         while(getline(line1,value,','))
-        {  value.erase(remove(value.begin(), value.end(), ' '), value.end()); // remove all spaces in minterms
-            convert_num_to_binary(value.substr(1),false);} //pushes the numbers themselves
+        {  
+            value.erase(remove(value.begin(), value.end(), ' '), value.end()); // remove all spaces in minterms
+            value = bitset<20>(stoi(value.substr(1))).to_string().substr(20 - size); // convert to binary with leading zeros
+            minterms.push_back(value);
+        }
     }
     else{//if it is maxterm
-        convert_max_to_min(v1);}
-    
-    while(getline(line2,value,','))
-    {  value.erase(remove(value.begin(), value.end(), ' '), value.end()); // remove all spaces in do not cares
-        convert_num_to_binary(value.substr(1),true);
+        convert_max_to_min(v1);
     }
+    
 }
 
 
@@ -44,45 +54,6 @@ QM::~QM(){
     minterms.clear();
 }
 
-void QM::convert_num_to_binary(string n,bool DNC){
-  
-    int number=stoi(n);
-    string binary_i;
-            while (number > 0) {
-                binary_i = (number % 2 ? "1" : "0") + binary_i;
-                number /= 2;
-            }
-            while (binary_i.length() < size)
-                binary_i = "0" + binary_i;
-    if(DNC){doNotCares.push_back(binary_i);}//if do not care add it to the do not care vector
-    minterms.push_back(binary_i);
-    
-    //this part above was taken from chatgpt, I had a problem because my do not care vector was of type int and my collegue was expecting it to be of type string just like the rest. This made a problem in the convert_max_to_min function when using the find function. I asked chatgpt and he said to include this part and I realized how much more efficient it was compared to the code I wrote here so I made sure it is correct and makes sense and decided to use it. You will find below my initial implementation and in one of the comments I wrote how I do not like it and maybe I should try to change it. So I guess it was sign to use it.
-    
-    
-    //  vector <int> rem;//this will store the remainders
-//    if(number == 0) {
-  //         string zero_string(size, '0');
-    //    if(DNC){doNotCares.push_back(n);}//if do not care add it to the do not care vector
-     //   minterms.push_back(zero_string);
-      //     return;
-      // }
-    
-   // while(number>0){
-     //   rem.push_back(number%2);//converts the number into binary and stores it in reminder but in the wrong order
-    //    number/=2;
- //   }//maybe instead of the two function just use a stack???
-    
-   // string value;
-   // while(rem.size()>0){//this takes the numbers from the vector in the opposite order of the division
-     //   value+=to_string(*(rem.end()-1));
-       // rem.pop_back();
- //   }
-   //while(value.length() < size) {//this part is to ensure to add remaining zeros at the beginning of the number
-     //      value = "0" + value;
-   //    }
-}
-
 void QM::convert_max_to_min(string line){
     stringstream s(line);
     vector <int> max; //vectors that stores the numbers that are maxterms
@@ -94,24 +65,18 @@ void QM::convert_max_to_min(string line){
     }
     
     for(int i=0;i<pow(2,size);i++){
-        auto it1 =find(max.begin(), max.end(), i);//checks the location of the number in max
+        string binary_i = bitset<20>(stoi(value.substr(1))).to_string().substr(20 - size);//this converts the number to binary so that I can compare it with the numbers in do not care
         
-        string binary_i;//this converts the number to binary so that I can compare it with the numbers in do not care
-                int num = i;
-                while (num > 0) {
-                    binary_i = (num % 2 ? "1" : "0") + binary_i;
-                    num /= 2;
-                }
-                while (binary_i.length() < size)
-                    binary_i = "0" + binary_i;
-        auto it2 = find(doNotCares.begin(), doNotCares.end(), binary_i);
+        auto it1 =find(max.begin(), max.end(), i);//checks the location of the number in max
+        auto it2 = find(doNotCares.begin(), doNotCares.end(), binary_i); //checks the location of the number in doNotCares
 
-        if(it1==max.end() && it2==doNotCares.end()) //if the number does not exist in maxterm or do not care then it is a minterm
-        {convert_num_to_binary(to_string(i),false);}
+        if(it1==max.end() && it2==doNotCares.end()){ //if the number does not exist in maxterm or do not care then it is a minterm{convert_num_to_binary(to_string(i),false);
+            minterms.push_back(binary_i);
+        }
     }
 }
 
-vector <string> QM::find_EPI(){
+void QM::generateEPI(){
     vector<vector<string>> chart (PI.size(),vector<string>(minterms.size(),"0"));
     for(int i=0;i<PI.size();i++){
         chart[i][0]=PI[i];//we created the rows of the coverage chart
@@ -148,6 +113,108 @@ vector <string> QM::find_EPI(){
         if(count==1){
             EPI.push_back(chart[i][0]);}
     }//this tries to find the EPI which is a minterm is covered exactly once
-    
-    return EPI;
+}
+
+void QM::generateSolutions()
+{
+    if (minterms.size() == 0) //If there are no minterms, the only solution is the set of essential prime implicants
+    {
+        solutions.push_back(EPI);
+        return;
+    }
+    vector<int> coverage(PI.size(), 0); //Vector to store coverage of each prime implicant
+    for (int i = 0; i < PI.size(); i++)
+    {
+        for (int j = 0; j < minterms.size(); j++)
+        {
+            if (isCovered(minterms[j], PI[i]))
+                coverage[i] |= (1 << j);
+        }
+    }
+    vector<int> solutionBits; //Vector to store bit representations of solutions
+    int covered;
+    for (int i = 0; i < pow(2, PI.size()); i++)
+    {
+        covered = 0;
+        for (int j = 0; j < PI.size(); j++)
+        {
+            if (i & (1 << j))
+                covered |= coverage[j];
+            if (covered == pow(2, minterms.size()) - 1)
+            {
+                solutionBits.push_back(i);
+                break;
+            }
+        }
+    }
+    sort(solutionBits.begin(), solutionBits.end(), [](int a, int b) 
+         { return __builtin_popcount(a) < __builtin_popcount(b); }); //Sort the solution bits based on the number of prime implicants
+    int min = __builtin_popcount(solutionBits[0]);
+    for (int i = 0; i < solutionBits.size(); i++)
+    {
+        if (__builtin_popcount(solutionBits[i]) == min)
+        {
+            solutions.push_back(EPI);
+            for (int j = 0; j < PI.size(); j++)
+            {
+                if (solutionBits[i] & (1 << j))
+                    solutions[i].push_back(PI[j]); //Add the selected prime implicants to the solution
+            }
+        }
+        else
+            break;
+    }
+}
+
+void QM::displayEPI() const
+{
+    cout << "Essential Implicants: ";
+    for (int i = 0; i < EPI.size(); i++)
+    {
+        if (i > 0)
+            cout << ", ";
+        char c = 'A';
+        for (int j = 0; j < size; j++)
+        {
+            if (EPI[i][j] == '1')
+                cout << c;
+            else if (EPI[i][j] == '0')
+                cout << c << "'";
+            c++;
+        }
+    }
+    cout << endl;
+}
+
+void QM::displaySolutions() const
+{
+    cout << "Solutions:\n";
+    for (int i = 0; i < solutions.size(); i++)
+    {
+        for (int j = 0; j < solutions[i].size(); j++)
+        {
+            if (j > 0)
+                cout << " + ";
+            char c = 'A';
+            for (int k = 0; k < size; k++)
+            {
+                if (solutions[i][j][k] == '1')
+                    cout << c;
+                else if (solutions[i][j][k] == '0')
+                    cout << c << "'";
+                c++;
+            }
+        }
+        cout << endl;
+    }
+}
+
+bool QM::isCovered(const string &minterm, const string &pi)
+{
+    for (int i = 0; i < size; i++)
+    {
+        if (pi[i] != '-' && pi[i] != minterm[i])
+            return 0;
+    }
+    return 1;
 }
