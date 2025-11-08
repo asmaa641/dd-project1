@@ -7,7 +7,9 @@
 
 #include <iostream>
 #include <fstream>
+#include <vector>
 #include "PI.h"
+#include "generatePI.h"
 using namespace std;
 
 int main(int argc, const char * argv[]) {
@@ -38,5 +40,17 @@ int main(int argc, const char * argv[]) {
     
          PI colum1(stoi(line1),line2,line3);
     file.close();
+
+    vector<string> minterms  = {"000", "001", "011", "111"};
+    vector<string> dontcares = {"010"};  // try {} if you have none
+
+    generatePI gen;
+    vector<string> PIs = gen.generatePrimeImplicants(minterms, dontcares);
+
+    cout << "Prime Implicants (" << PIs.size() << "):\n";
+    for (size_t i = 0; i < PIs.size(); ++i) {
+        cout << "  " << PIs[i] << '\n';
+    }
+
     return 0;
 }
