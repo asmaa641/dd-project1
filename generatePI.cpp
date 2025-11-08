@@ -101,7 +101,7 @@ vector<string> generatePI::generatePrimeImplicants(vector<string>& minterms, vec
             }
         }
 
-        // anything not used this round os prime implicant
+        // anything not used this round os a prime implicant
         for (int i = 0; i < groups.size(); i++) {
             for (int j = 0; j < groups[i].size(); j++) {
                 if (!used[i][j]) {
