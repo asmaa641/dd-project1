@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <bitset>
 #include <string>
-#include "generatePI.h"
+//#include "generatePI.h"
 using namespace std;
 
 QM::QM(int s,string v1,string v2):size(s),minterms(),doNotCares(),PI(),EPI(),solutions(){
@@ -20,37 +20,40 @@ QM::QM(int s,string v1,string v2):size(s),minterms(),doNotCares(),PI(),EPI(),sol
     m=v1.substr(0,1);
     stringstream line1(v1),line2(v2);//I am using stringstream so I can use getline
     string value;
-    
+        
     while(getline(line2,value,','))
-    {  
+    {
         value.erase(remove(value.begin(), value.end(), ' '), value.end()); // remove all spaces in do not cares
+        int num = stoi(value.substr(1));  // get the numeric value
+               if (num < 0 || num >= (1 << size)) {
+                   throw std::out_of_range("DoNotCare value " + to_string(num) + " is out of range for " + to_string(size) + " variables.");
+               }//checks for if the number read is not in the range
         value = bitset<20>(stoi(value.substr(1))).to_string().substr(20 - size); // convert to binary with leading zeros
         doNotCares.push_back(value);
     }
 
     if(m=="m"){//if it is minterm
         while(getline(line1,value,','))
-        {  
+        {
             value.erase(remove(value.begin(), value.end(), ' '), value.end()); // remove all spaces in minterms
+            int num = stoi(value.substr(1));
+                        if (num < 0 || num >= (1 << size)) {
+                            throw std::out_of_range("Minterm value " + to_string(num) + " is out of range for " + to_string(size) + " variables.");
+                        }//checks for if the number read is not in the range
             value = bitset<20>(stoi(value.substr(1))).to_string().substr(20 - size); // convert to binary with leading zeros
             minterms.push_back(value);
         }
     }
-    else{//if it is maxterm
+    else if(m=="M"){//if it is maxterm
         convert_max_to_min(v1);
+    }
+    else{
+        throw std::runtime_error("Unknown if numbers are minterms or maxterms.");
     }
 }
 
 
 QM::~QM(){
-    // for(string s:minterms) //this is just to ensure that the number in the vector are right
-    //     cout<<"Minterms:"<<s<<endl;
-    // for(string s:doNotCares) //this is just to ensure that the number in the vector are right
-    //     cout<<"Do not cares:"<<s<<endl;
-    // for(string s:EPI) //this is just to ensure that the number in the vector are right
-    //     cout<<"EPI:"<<s<<endl;
-
-    
     minterms.clear();
 }
 
@@ -65,7 +68,7 @@ void QM::convert_max_to_min(string line){
     }
     
     for(int i=0;i<pow(2,size);i++){
-        string binary_i = bitset<20>(stoi(value.substr(1))).to_string().substr(20 - size);//this converts the number to binary so that I can compare it with the numbers in do not care
+        string binary_i = bitset<20>(i).to_string().substr(20 - size);//this converts the number to binary so that I can compare it with the numbers in do not care
         
         auto it1 =find(max.begin(), max.end(), i);//checks the location of the number in max
         auto it2 = find(doNotCares.begin(), doNotCares.end(), binary_i); //checks the location of the number in doNotCares
@@ -80,8 +83,8 @@ void QM::createFirstColumn(vector<vector<string>>& groups){
         
     if (minterms.empty() && doNotCares.empty()) return; //nothing there
 
-    int inputSize = !minterms.empty() ? minterms[0].size() : doNotCares[0].size(); 
-    //get input size by checking the size of the first element 
+    int inputSize = !minterms.empty() ? minterms[0].size() : doNotCares[0].size();
+    //get input size by checking the size of the first element
 
     vector<string> allTerms = minterms; // create a vector of all terms to put minterms and dont cares together
     allTerms.insert(allTerms.end(), doNotCares.begin(), doNotCares.end());
@@ -98,8 +101,6 @@ void QM::createFirstColumn(vector<vector<string>>& groups){
         if (onesCount >= 0) {
             groups[onesCount].push_back(allTerms[i]);
         }
-        
-        
     }
 }
 
@@ -110,14 +111,14 @@ vector<string> QM::combineMinterms(string term1, string term2) { //combine minte
     for (int i = 0; i < term1.length(); i++) {
         if (term1[i] != term2[i]) { // checking if theres a bit thats not equal
             diffCount++;
-            combinedTerm += '-';  
+            combinedTerm += '-';
         } else {
             combinedTerm += term1[i];
         }
     }
 
     if (diffCount == 1) { // we just want the ones that differ only by one bit
-        return {combinedTerm}; 
+        return {combinedTerm};
     }
 
     return {};
@@ -127,14 +128,14 @@ vector<string> QM::combineMinterms(string term1, string term2) { //combine minte
 
 vector<string> QM::generatePI() {
    
-    // int inputSize = minterms.empty() ? 0 : minterms[0].size(); // get input size 
+    // int inputSize = minterms.empty() ? 0 : minterms[0].size(); // get input size
 
     vector<vector<string>> groups(size + 1);
     vector<string> primeImplicants;
 
     createFirstColumn(groups);
 
-    // flatten all groups into a vector (single list) instead of a vector of vectors so we can 
+    // flatten all groups into a vector (single list) instead of a vector of vectors so we can
     // process them easier in the while loop
     // vector<string> current;
     // for (int i = 0; i < groups.size(); i++) {
@@ -202,8 +203,8 @@ vector<string> QM::generatePI() {
     for (int i = 0; i < primeImplicants.size(); ++i) {
     bool exists = false;
         for (int j = 0; j < PI.size(); ++j) {
-            if (PI[j] == primeImplicants[i]) { 
-                exists = true; 
+            if (PI[j] == primeImplicants[i]) {
+                exists = true;
             }
     }
     if (!exists) PI.push_back(primeImplicants[i]);
@@ -213,89 +214,93 @@ return PI;
 }
 
 bool QM::generateEPI(){
-    bool returnValue = 0;
-    int covers, first;
-    vector<bool> essential(PI.size(), 0);
-    for (int i = 0; i < minterms.size(); i++)
-    {
-        covers = 0;
-        for (int j = 0; j < PI.size(); j++)
-        {
-            if (isCovered(minterms[i], PI[j]))
-            {
-                covers++;
-                if (covers == 1)
-                    first = j;
-            }
-        }
-        if (covers == 1)
-        {
-            returnValue = 1;
-            essential[first] = 1;
-        }
-    }
-    for (int i = 0; i < PI.size(); i++)
-    {
-        if (essential[i])
-        {
-            for (int j = 0; j < minterms.size(); j++)
-            {
-                if (isCovered(minterms[j], PI[i]))
-                {
-                    minterms.erase(minterms.begin() + j);
-                    j--;
-                }
-            }
-            EPI.push_back(PI[i]);
-            PI.erase(PI.begin() + i);
-            essential.erase(essential.begin() + i);
-            i--;
-        }
-    }
-    return returnValue;
-    /*
-    bool returnValue = 0;
-    vector<vector<string>> chart (PI.size(),vector<string>(minterms.size(),"0"));
-    for(int i=0;i<PI.size();i++){
-        chart[i][0]=PI[i];//we created the rows of the coverage chart
-        
-        for(int j=0;j<minterms.size();j++){
-            string s=minterms[j];
-            auto it2 =find(doNotCares.begin(), doNotCares.end(), s);
-            if(it2==doNotCares.end()){
-                chart[0][j]=s;
-            }
-        } //we created the columns as well
-    }//full coverage chart created and initialized to zero
-    
-    for(int i=1;i<chart.size();i++){
-        int comp=0;
-        for(int j=1;j<chart[0].size();j++){
-            for(int k=0;k<4;k++){
-                if(chart[0][j].substr(k,k+1)==chart[i][0].substr(k,k+1)){
-                    comp++;
-                }
-            }
-            if(comp==2){
-                chart[i][j]="1";
-            }
-        }
-    }//this part marks the minterms covered with 1
-    
-    for(int i=1;i<chart.size();i++){
-        int count=0;
-        for(int j=1;j<chart[0].size();j++){
-            if(chart[i][j]=="1"){
-                count++;}
-        }
-        if(count==1){
-            EPI.push_back(chart[i][0]);
-            returnValue = 1;
-        }
-    }//this tries to find the EPI which is a minterm is covered exactly once
-    return returnValue;
-    */
-}
+    bool returnValue = false;
+
+       // Create coverage chart with an extra row and column for headers
+       vector<vector<string>> chart(PI.size() + 1, vector<string>(minterms.size() + 1, "0"));
+
+       // Fill first row (minterm headers) and first column (PI headers)
+       for (int i = 0; i < PI.size(); i++)
+       {
+           chart[i + 1][0] = PI[i]; // row header
+       }
+       for (int j = 0; j < minterms.size(); j++)
+       {
+           string s = minterms[j];
+           auto it2 = find(doNotCares.begin(), doNotCares.end(), s);
+           if (it2 == doNotCares.end())
+           {
+               chart[0][j + 1] = s; // column header
+           }
+       }//full coverage chart is created and all is initialized to zero
+
+       for (int i = 1; i < chart.size(); i++)
+       {
+           for (int j = 1; j < chart[0].size(); j++)
+           {
+               string m = chart[0][j];  // minterm
+               string p = chart[i][0];  // PI
+
+               if (isCovered(m, p))
+               {
+                   chart[i][j] = "1";
+               }
+           }
+       }// Mark cells whose minterm is covered by the PI with 1
+
+
+       vector<bool> essential(PI.size(), false);  // Vector identical to PI to see which ones are EPI
+
+       for (int j = 1; j < chart[0].size(); j++)
+       {
+           int coverCount = 0;
+           int first = -1;//to make sure it is out of the array index at first
+
+           for (int i = 1; i < chart.size(); i++)
+           {
+               if (chart[i][j] == "1")
+               {
+                   coverCount++;
+                   if (coverCount == 1)
+                       first = i;
+               }
+           }//find first minterm that covers the PI
+
+           if (coverCount == 1 && first != -1)
+           {
+               essential[first - 1] = true;//adjusting index since the chart rows start at 1 and 0 like the vectors
+               returnValue = true;
+           }
+       }//If the minterms is covered exactly once then it is a EPI
+
+       for (int i = 0; i < PI.size(); i++)
+       {
+           if (essential[i])
+           {
+               string essentialPI = PI[i];
+
+               for (int j = 0; j < minterms.size(); j++)
+               {
+                   if (isCovered(minterms[j], essentialPI))
+                   {
+                       minterms.erase(minterms.begin() + j);
+                       j--; // adjust index after erase
+                   }
+               }//this will remove the minterms that already covered
+
+               EPI.push_back(essentialPI); // Move this PI to EPI vector
+
+
+               PI.erase(PI.begin() + i); // remove it from PI vector
+
+               essential.erase(essential.begin() + i);
+               i--; // adjust index after erase because the vector size changed
+           }
+       }
+       return returnValue;
+   }
+   
+
 
 bool QM::columnDominance()
 {
@@ -426,6 +431,7 @@ void QM::generateSolutions()
 
 void QM::displayPI() const
 {
+    if(!PI.size()){cout<<"No prime implicants"<<endl;}
     cout << "Prime Implicants: ";
     for (int i = 0; i < PI.size(); i++)
     {
@@ -443,6 +449,7 @@ void QM::displayPI() const
 
 void QM::displayEPI() const
 {
+    if(!EPI.size()){cout<<"No essential prime implicants"<<endl;}
     cout << "Essential Implicants: ";
     for (int i = 0; i < EPI.size(); i++)
     {
@@ -463,6 +470,7 @@ void QM::displaySolutions() const
     cout << "Solutions:\n";
     for (int i = 0; i < solutions.size(); i++)
     {
+        cout<<"F= ";
         for (int j = 0; j < solutions[i].size(); j++)
         {
             if (j > 0)

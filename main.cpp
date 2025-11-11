@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     string line2;
-    if(!getline(file, line2)){
+    if(!getline(file, line2) && (line2.substr(0,1)!="m" || line2.substr(0,1)!="M")){
         cout<<"Missing second line"<<endl;
         return 1;
     }
