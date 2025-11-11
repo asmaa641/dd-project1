@@ -7,11 +7,13 @@
 #include <fstream>
 #include <iostream>
 #include "QM.h"
+#include <filesystem>
 using namespace std;
 
-int main() {
+int main(int argc, char* argv[]) {
+    filesystem::path exePath = filesystem::absolute(argv[0]).parent_path();
     ifstream file;
-    file.open("/Users/jojo/Downloads/4_input_allPI_are_EPI.txt");
+    file.open(exePath / "4_input_allPI_are_EPI.txt");
     
     if (!file.is_open()) { //to ensure the file opens
             cout << "Error: Unable to open file!" << endl;
@@ -35,11 +37,14 @@ int main() {
         return 1;
     }//these three conditions ensure that the file is written in the right format
     
-         QM trial(stoi(line1),line2,line3);
-        
+    QM trial(stoi(line1),line2,line3);
+    trial.generatePI();
+    trial.displayPI();
+    trial.generateSolutions();
+    trial.displayEPI();
+    trial.displaySolutions();
 
     file.close();
-
 
     return 0;
 }

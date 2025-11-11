@@ -39,7 +39,6 @@ QM::QM(int s,string v1,string v2):size(s),minterms(),doNotCares(),PI(),EPI(),sol
     else{//if it is maxterm
         convert_max_to_min(v1);
     }
-    
 }
 
 
@@ -76,47 +75,6 @@ void QM::convert_max_to_min(string line){
         }
     }
 }
-
-void QM::generateEPI(){
-    vector<vector<string>> chart (PI.size(),vector<string>(minterms.size(),"0"));
-    for(int i=0;i<PI.size();i++){
-        chart[i][0]=PI[i];//we created the rows of the coverage chart
-        
-        for(int j=0;j<minterms.size();j++){
-            string s=minterms[j];
-            auto it2 =find(doNotCares.begin(), doNotCares.end(), s);
-            if(it2==doNotCares.end()){
-                chart[0][j]=s;
-            }
-        } //we created the columns as well
-    }//full coverage chart created and initialized to zero
-    
-    for(int i=1;i<chart.size();i++){
-        int comp=0;
-        for(int j=1;j<chart[0].size();j++){
-            for(int k=0;k<4;k++){
-                if(chart[0][j].substr(k,k+1)==chart[i][0].substr(k,k+1)){
-                    comp++;
-                }
-            }
-            if(comp==2){
-                chart[i][j]="1";
-            }
-        }
-    }//this part marks the minterms covered with 1
-    
-    for(int i=1;i<chart.size();i++){
-        int count=0;
-        for(int j=1;j<chart[0].size();j++){
-            if(chart[i][j]=="1"){
-                count++;}
-        }
-        if(count==1){
-            EPI.push_back(chart[i][0]);}
-    }//this tries to find the EPI which is a minterm is covered exactly once
-}
-
-
 
 void QM::createFirstColumn(vector<vector<string>>& groups){
         
@@ -167,7 +125,7 @@ vector<string> QM::combineMinterms(string term1, string term2) { //combine minte
 
 
 
-vector<string> QM::generatePrimeImplicants() {
+vector<string> QM::generatePI() {
    
     // int inputSize = minterms.empty() ? 0 : minterms[0].size(); // get input size 
 
@@ -251,19 +209,178 @@ vector<string> QM::generatePrimeImplicants() {
     if (!exists) PI.push_back(primeImplicants[i]);
 }
 return PI;
-
     
 }
 
+bool QM::generateEPI(){
+    bool returnValue = 0;
+    int covers, first;
+    vector<bool> essential(PI.size(), 0);
+    for (int i = 0; i < minterms.size(); i++)
+    {
+        covers = 0;
+        for (int j = 0; j < PI.size(); j++)
+        {
+            if (isCovered(minterms[i], PI[j]))
+            {
+                covers++;
+                if (covers == 1)
+                    first = j;
+            }
+        }
+        if (covers == 1)
+        {
+            returnValue = 1;
+            essential[first] = 1;
+        }
+    }
+    for (int i = 0; i < PI.size(); i++)
+    {
+        if (essential[i])
+        {
+            for (int j = 0; j < minterms.size(); j++)
+            {
+                if (isCovered(minterms[j], PI[i]))
+                {
+                    minterms.erase(minterms.begin() + j);
+                    j--;
+                }
+            }
+            EPI.push_back(PI[i]);
+            PI.erase(PI.begin() + i);
+            essential.erase(essential.begin() + i);
+            i--;
+        }
+    }
+    return returnValue;
+    /*
+    bool returnValue = 0;
+    vector<vector<string>> chart (PI.size(),vector<string>(minterms.size(),"0"));
+    for(int i=0;i<PI.size();i++){
+        chart[i][0]=PI[i];//we created the rows of the coverage chart
+        
+        for(int j=0;j<minterms.size();j++){
+            string s=minterms[j];
+            auto it2 =find(doNotCares.begin(), doNotCares.end(), s);
+            if(it2==doNotCares.end()){
+                chart[0][j]=s;
+            }
+        } //we created the columns as well
+    }//full coverage chart created and initialized to zero
+    
+    for(int i=1;i<chart.size();i++){
+        int comp=0;
+        for(int j=1;j<chart[0].size();j++){
+            for(int k=0;k<4;k++){
+                if(chart[0][j].substr(k,k+1)==chart[i][0].substr(k,k+1)){
+                    comp++;
+                }
+            }
+            if(comp==2){
+                chart[i][j]="1";
+            }
+        }
+    }//this part marks the minterms covered with 1
+    
+    for(int i=1;i<chart.size();i++){
+        int count=0;
+        for(int j=1;j<chart[0].size();j++){
+            if(chart[i][j]=="1"){
+                count++;}
+        }
+        if(count==1){
+            EPI.push_back(chart[i][0]);
+            returnValue = 1;
+        }
+    }//this tries to find the EPI which is a minterm is covered exactly once
+    return returnValue;
+    */
+}
+
+bool QM::columnDominance()
+{
+    bool returnValue = 0;
+    vector<bitset<1050000>> coverage(minterms.size(), 0);
+    for (int i = 0; i < minterms.size(); i++)
+    {
+        for (int j = 0; j < PI.size(); j++)
+        {
+            if (isCovered(minterms[i], PI[j])) coverage[i] |= (1 << j);
+        }
+    }
+    for (int i = 0; i < minterms.size(); i++)
+    {
+        for (int j = i + 1; j < minterms.size(); j++)
+        {
+            if ((coverage[j] | ~coverage[i]).all())
+            {
+                returnValue = 1;
+                minterms.erase(minterms.begin() + j);
+                coverage.erase(coverage.begin() + j);
+                j--;
+            }
+            else if ((coverage[i] | ~coverage[j]).all())
+            {
+                returnValue = 1;
+                minterms.erase(minterms.begin() + i);
+                coverage.erase(coverage.begin() + i);
+                i--;
+                break;
+            }
+        }
+    }
+    return returnValue;
+}
+
+bool QM::rowDominance()
+{
+    bool returnValue = 0;
+    vector<bitset<1050000>> coverage(PI.size(), 0);
+    for (int i = 0; i < PI.size(); i++)
+    {
+        for (int j = 0; j < minterms.size(); j++)
+        {
+            if (isCovered(minterms[j], PI[i])) coverage[i] |= (1 << j);
+        }
+    }
+    for (int i = 0; i < PI.size(); i++)
+    {
+        for (int j = i + 1; j < PI.size(); j++)
+        {
+            if ((coverage[j] | ~coverage[i]).all())
+            {
+                returnValue = 1;
+                PI.erase(PI.begin() + i);
+                coverage.erase(coverage.begin() + i);
+                i--;
+                break;
+            }
+            else if ((coverage[i] | ~coverage[j]).all())
+            {
+                returnValue = 1;
+                PI.erase(PI.begin() + j);
+                coverage.erase(coverage.begin() + j);
+                j--;
+            }
+        }
+    }
+    return returnValue;
+}
 
 void QM::generateSolutions()
 {
-    if (minterms.size() == 0) //If there are no minterms, the only solution is the set of essential prime implicants
+    while(true){
+        bool b1 = generateEPI();
+        bool b2 = columnDominance();
+        bool b3 = rowDominance();
+        if(!b1 && !b2 && !b3) break;
+    }
+    if (minterms.size() == 0)
     {
         solutions.push_back(EPI);
         return;
     }
-    vector<int> coverage(PI.size(), 0); //Vector to store coverage of each prime implicant
+    vector<bitset<1050000>> coverage(PI.size(), 0);
     for (int i = 0; i < PI.size(); i++)
     {
         for (int j = 0; j < minterms.size(); j++)
@@ -272,8 +389,8 @@ void QM::generateSolutions()
                 coverage[i] |= (1 << j);
         }
     }
-    vector<int> solutionBits; //Vector to store bit representations of solutions
-    int covered;
+    vector<bitset<1050000>> solutionBits;
+    bitset<1050000> covered;
     for (int i = 0; i < pow(2, PI.size()); i++)
     {
         covered = 0;
@@ -288,18 +405,18 @@ void QM::generateSolutions()
             }
         }
     }
-    sort(solutionBits.begin(), solutionBits.end(), [](int a, int b) 
-         { return __builtin_popcount(a) < __builtin_popcount(b); }); //Sort the solution bits based on the number of prime implicants
-    int min = __builtin_popcount(solutionBits[0]);
+    sort(solutionBits.begin(), solutionBits.end(), [](bitset<1050000> a, bitset<1050000> b)
+         { return a.count() < b.count(); });
+    int min = solutionBits[0].count();
     for (int i = 0; i < solutionBits.size(); i++)
     {
-        if (__builtin_popcount(solutionBits[i]) == min)
+        if (solutionBits[i].count() == min)
         {
             solutions.push_back(EPI);
             for (int j = 0; j < PI.size(); j++)
             {
-                if (solutionBits[i] & (1 << j))
-                    solutions[i].push_back(PI[j]); //Add the selected prime implicants to the solution
+                if (solutionBits[i][j])
+                    solutions[i].push_back(PI[j]);
             }
         }
         else
@@ -307,20 +424,34 @@ void QM::generateSolutions()
     }
 }
 
+void QM::displayPI() const
+{
+    cout << "Prime Implicants: ";
+    for (int i = 0; i < PI.size(); i++)
+    {
+        if (i > 0) cout << ", ";
+        char c = 'A';
+        for (int j = 0; j < size; j++)
+        {
+            if (PI[i][j] == '1') cout<<c;
+            else if (PI[i][j] == '0') cout << c << "'";
+            c++;
+        }
+    }
+    cout << endl;
+}
+
 void QM::displayEPI() const
 {
     cout << "Essential Implicants: ";
     for (int i = 0; i < EPI.size(); i++)
     {
-        if (i > 0)
-            cout << ", ";
+        if (i > 0) cout << ", ";
         char c = 'A';
         for (int j = 0; j < size; j++)
         {
-            if (EPI[i][j] == '1')
-                cout << c;
-            else if (EPI[i][j] == '0')
-                cout << c << "'";
+            if (EPI[i][j] == '1') cout<<c;
+            else if (EPI[i][j] == '0') cout << c << "'";
             c++;
         }
     }
