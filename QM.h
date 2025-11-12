@@ -26,7 +26,7 @@ private:
     void convert_max_to_min(string line);//function that converts maxterms into minterms
     bool isCovered(const string& minterm, const string& pi);
     vector<string> combineMinterms(string term1, string term2);
-
+    void generateVerilog(vector <string> v) const;//function that generates verilog code
 
 public:
     QM(int s,string v1,string v2);//constructor that takes the number of inputs, minterms, and do not cares and converts them into binary
@@ -36,7 +36,7 @@ public:
     void displayPI() const;//displays Prime Implicants
     void displayEPI() const;//displays Essential Prime Implicants
     void displaySolutions() const;//displays final solution
-
+    
     
 };
 #endif

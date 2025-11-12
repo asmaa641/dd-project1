@@ -496,21 +496,29 @@ void QM::displaySolutions() const
     for (int i = 0; i < solutions.size(); i++)
     {
         cout<<"F= ";
+        vector <string> verilog;
         for (int j = 0; j < solutions[i].size(); j++)
         {
             if (j > 0)
                 cout << " + ";
             char c = 'A';
+            string term="";
             for (int k = 0; k < size; k++)
             {
                 if (solutions[i][j][k] == '1')
-                    cout << c;
+                    {cout << c;
+                    term += c;}//this will add the to term
                 else if (solutions[i][j][k] == '0')
-                    cout << c << "'";
+                {cout << c << "'";
+                    term += c;
+                    term += '\'';
+                }
                 c++;
             }
+            verilog.push_back(term);//this pushes term in the vector so I can create a verilog with it
         }
-        cout << endl;
+        cout << endl<<endl;
+        generateVerilog(verilog);
     }
 }
 
@@ -522,4 +530,42 @@ bool QM::isCovered(const string &minterm, const string &pi)
             return 0;
     }
     return 1;
+}
+
+void QM::generateVerilog(vector <string> v) const {
+    char c='A';
+    cout<<"The verilog code is: "<<endl<<endl;
+    cout<<"module circuit(input A,";
+    for(int i=1;i<size;i++){
+        c++;
+        cout<<" input "<<c<<",";
+    }
+    cout<<" output z);"<<endl;//Initialized module and created the inputs and outputs
+    
+    cout<<"assign z= ";
+    for(int i=0;i<v.size();i++){
+        cout << "(";
+        for(int j=0;j<v[i].length();j++){
+
+            if(v[i][j]=='\'')
+                {continue;}
+             else if(v[i][j+1]=='\'')
+                    {cout<<"~"<<v[i][j];}
+                else
+                    {cout<<v[i][j];}
+            
+            if(j+1<v[i].length() && v[i][j+1]=='\''){
+                if (j + 2 < v[i].length())
+                cout<<" & ";
+            }
+            else if(j+1<v[i].length())
+                cout<<" & ";
+        }//this for loops is to AND each term
+        cout<<")";
+        if(i!=v.size()-1){
+            cout<<" | ";
+        }
+    }//this OR all the terms together
+    cout<<";"<<endl;
+    cout<<"endmodule"<<endl<<endl;
 }
