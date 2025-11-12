@@ -209,6 +209,31 @@ vector<string> QM::generatePI() {
     }
     if (!exists) PI.push_back(primeImplicants[i]);
 }
+for (int i = 0; i < PI.size(); ++i) {
+     string pi = PI[i];
+    vector<string> covered; // store the minterms covered by the PIs
+
+    for (int j = 0; j < minterms.size(); ++j) {   // iterate only real minterms
+         string m = minterms[j];
+        if (isCovered(m, pi)) {
+            covered.push_back(m);
+        }
+    }
+
+    cout << pi << " covers: ";
+    if (covered.empty()) {
+        cout << "{}\n";
+    } else {
+        for (int k = 0; k < covered.size(); ++k) {
+            if (k > 0) cout << ", "; // to avoid putting a comma in the beginning
+            int decimal_index= stoi(covered[k], nullptr, 2); // string to integer but takes in that the base is 2 (binary) so it can be convereted to decimal
+            cout << covered[k] << "(m"<< decimal_index << ")";
+        }
+        cout << "\n";
+    }
+}
+cout << endl;
+
 return PI;
     
 }
