@@ -314,14 +314,33 @@ bool QM::generateEPI(){
                }//this will remove the minterms that already covered
 
                EPI.push_back(essentialPI); // Move this PI to EPI vector
-
-
+               
+               cout<<"Minterms that are not covered by the Essential Prime Implicant ";
+               char c = 'A';
+               for (int j = 0; j < essentialPI.size(); j++)
+               {
+                   if (essentialPI[j] == '1') cout<<c;
+                   else if (essentialPI[j] == '0') cout << c << "'";
+                   c++;
+               }
+               cout<<": "<<endl;
+               
+               
                PI.erase(PI.begin() + i); // remove it from PI vector
+               
+               for(int i=1;i<chart[0].size();i++){
+                   if(!isCovered(chart[0][i], essentialPI)){
+                       int decimal = stoi(chart[0][i], nullptr, 2); // Converting from binary to decimal
+                       cout<<decimal<<", ";
+                   }
+               }
+               cout<<endl;//this print all minterms that are not covered by the EPI
 
                essential.erase(essential.begin() + i);
                i--; // adjust index after erase because the vector size changed
            }
        }
+   
        return returnValue;
    }
    
