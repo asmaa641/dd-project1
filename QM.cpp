@@ -135,16 +135,7 @@ vector<string> QM::generatePI() {
 
     createFirstColumn(groups);
 
-    // flatten all groups into a vector (single list) instead of a vector of vectors so we can
-    // process them easier in the while loop
-    // vector<string> current;
-    // for (int i = 0; i < groups.size(); i++) {
-    //     for (int j = 0; j < groups[i].size(); j++) {
-    //         current.push_back(groups[i][j]);
-    //     }
-    // }
-
-    // loop until no more combinations possible to get unused terms (pis)
+    
     while (true) {
         vector<vector<string>> newGroups(size + 1);
         vector<string> combinedTerms;
@@ -200,7 +191,7 @@ vector<string> QM::generatePI() {
 
     // before returning lets check for duplicate terms
     
-    for (int i = 0; i < primeImplicants.size(); ++i) {
+    for (int i = 0; i < primeImplicants.size(); ++i) {// loop over the primeImplicants vector
     bool exists = false;
         for (int j = 0; j < PI.size(); ++j) {
             if (PI[j] == primeImplicants[i]) {
@@ -209,31 +200,54 @@ vector<string> QM::generatePI() {
     }
     if (!exists) PI.push_back(primeImplicants[i]);
 }
-for (int i = 0; i < PI.size(); ++i) {
-     string pi = PI[i];
-    vector<string> covered; // store the minterms covered by the PIs
 
-    for (int j = 0; j < minterms.size(); ++j) {   // iterate only real minterms
-         string m = minterms[j];
+// now we will print coverage for each PI (minterms + don't-cares)
+
+
+for (int i = 0; i < PI.size(); ++i) { //loop over deduped vectors
+    string pi = PI[i]; 
+
+    vector<string> coveredMinterms; 
+    vector<string> coveredDontCares;
+
+    // loop over minterm, pushes the minterm into coveredminterms vector if its covered
+    for (int j = 0; j < minterms.size(); ++j) {
+        string m = minterms[j];
         if (isCovered(m, pi)) {
-            covered.push_back(m);
+            coveredMinterms.push_back(m);
+        }
+    }
+
+    // don't-cares
+    for (int j = 0; j < doNotCares.size(); ++j) {
+        string d = doNotCares[j];
+        if (isCovered(d, pi)) {
+            coveredDontCares.push_back(d);
         }
     }
 
     cout << pi << " covers: ";
-    if (covered.empty()) {
-        cout << "{}\n";
-    } else {
-        for (int k = 0; k < covered.size(); ++k) {
-            if (k > 0) cout << ", "; // to avoid putting a comma in the beginning
-            int decimal_index= stoi(covered[k], nullptr, 2); // string to integer but takes in that the base is 2 (binary) so it can be convereted to decimal
-            cout << covered[k] << "(m"<< decimal_index << ")";
-        }
-        cout << "\n";
-    }
-}
-cout << endl;
 
+    // if nothing at all
+    if (coveredMinterms.empty() && coveredDontCares.empty()) {
+        cout << "{}\n";
+    }
+    // print minterms as binary (m<index>)
+    for (int k = 0; k < coveredMinterms.size(); ++k) {
+        int decimal_index = stoi(coveredMinterms[k], nullptr, 2);
+        cout << coveredMinterms[k] << "(m" << decimal_index << "),";
+    }
+
+    // print don't-cares as binary (d<index>)
+    for (int k = 0; k < coveredDontCares.size(); ++k) {
+        int decimal_index = stoi(coveredDontCares[k], nullptr, 2);
+        cout << coveredDontCares[k] << "(d" << decimal_index << "),";
+    }
+
+    cout << "\n";
+}
+
+cout << endl;
 return PI;
     
 }
