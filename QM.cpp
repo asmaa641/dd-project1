@@ -354,7 +354,7 @@ bool QM::columnDominance()
     {
         for (int j = 0; j < PI.size(); j++)
         {
-            if (isCovered(minterms[i], PI[j])) coverage[i] |= (1 << j);
+            if (isCovered(minterms[i], PI[j])) coverage[i].set(j);
         }
     }
     for (int i = 0; i < minterms.size(); i++)
@@ -389,7 +389,7 @@ bool QM::rowDominance()
     {
         for (int j = 0; j < minterms.size(); j++)
         {
-            if (isCovered(minterms[j], PI[i])) coverage[i] |= (1 << j);
+            if (isCovered(minterms[j], PI[i])) coverage[i].set(j);
         }
     }
     for (int i = 0; i < PI.size(); i++)
@@ -416,44 +416,50 @@ bool QM::rowDominance()
     return returnValue;
 }
 
+void QM::recursiveSearch(vector<bitset<1050000>>& coverage, bitset<1050000>& covered, int index, bitset<1050000>& currentSolution, vector<bitset<1050000>>& solutionBits)
+{
+    if (covered.count() == minterms.size())
+    {
+        solutionBits.push_back(currentSolution);
+        return;
+    }
+    if (index >= PI.size()) return;
+
+    // Include current PI
+    currentSolution.set(index);
+    bitset<1050000> newCovered = covered | coverage[index];
+    recursiveSearch(coverage, newCovered, index + 1, currentSolution, solutionBits);
+
+    // Exclude current PI
+    currentSolution.reset(index);
+    recursiveSearch(coverage, covered, index + 1, currentSolution, solutionBits);
+}
+
 void QM::generateSolutions()
 {
-    while(true){
+    while(true){ //keep applying the simplification methods until none of them can be applied anymore
         bool b1 = generateEPI();
         bool b2 = columnDominance();
         bool b3 = rowDominance();
         if(!b1 && !b2 && !b3) break;
     }
-    if (minterms.size() == 0)
+    if (minterms.size() == 0) //if all minterms are covered by EPI
     {
         solutions.push_back(EPI);
         return;
     }
-    vector<bitset<1050000>> coverage(PI.size(), 0);
+    vector<bitset<1050000>> coverage(PI.size(), 0); //coverage chart for remaining minterms and PIs
     for (int i = 0; i < PI.size(); i++)
     {
         for (int j = 0; j < minterms.size(); j++)
         {
-            if (isCovered(minterms[j], PI[i]))
-                coverage[i] |= (1 << j);
+            if (isCovered(minterms[j], PI[i])) coverage[i].set(j);
         }
     }
-    vector<bitset<1050000>> solutionBits;
-    bitset<1050000> covered;
-    for (int i = 0; i < pow(2, PI.size()); i++)
-    {
-        covered = 0;
-        for (int j = 0; j < PI.size(); j++)
-        {
-            if (i & (1 << j))
-                covered |= coverage[j];
-            if (covered == pow(2, minterms.size()) - 1)
-            {
-                solutionBits.push_back(i);
-                break;
-            }
-        }
-    }
+    vector<bitset<1050000>> solutionBits; //stores all the possible solutions in bitset form
+    bitset<1050000> covered = 0;
+    bitset<1050000> currentSolution = 0;
+    recursiveSearch(coverage, covered, 0, currentSolution, solutionBits);
     sort(solutionBits.begin(), solutionBits.end(), [](bitset<1050000> a, bitset<1050000> b)
          { return a.count() < b.count(); });
     int min = solutionBits[0].count();
@@ -468,8 +474,7 @@ void QM::generateSolutions()
                     solutions[i].push_back(PI[j]);
             }
         }
-        else
-            break;
+        else break;
     }
 }
 

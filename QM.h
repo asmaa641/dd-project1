@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <bitset>
 using namespace std;
 
 class QM{
@@ -21,8 +22,10 @@ private:
     const int size;//amount of input variables
     void createFirstColumn(vector<vector<string>>& groups);
     bool generateEPI();//function that finds EPI and returns them in as strings
-    bool columnDominance();
-    bool rowDominance();
+    bool columnDominance(); //function that performs column dominance and returns if any column was removed
+    bool rowDominance(); //function that performs row dominance and returns if any row was removed
+    void recursiveSearch(vector<bitset<1050000>>& coverage, bitset<1050000>& covered, int index, bitset<1050000>& currentSolution, vector<bitset<1050000>>& solutionBits);
+    //function that performs recursive search to find all possible solutions
     void convert_max_to_min(string line);//function that converts maxterms into minterms
     bool isCovered(const string& minterm, const string& pi);
     vector<string> combineMinterms(string term1, string term2);
