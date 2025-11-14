@@ -1,4 +1,4 @@
-# dd-project1 // i used chatgpt to beautify the readme file
+# dd-project1 
 
 This project implements the Quine–McCluskey (QM) algorithm for Boolean logic minimization.
 It processes minterms and optional don’t-care terms to generate a minimized expression using Prime Implicants (PI) and Essential Prime Implicants (EPI).
@@ -120,3 +120,5 @@ isCovered(minterm, pi)
 
 generateVerilog(vector<string>)
 → Prints minimized logic as Verilog assign syntax.
+
+// Note: I used chatgpt to beautify the readme file
