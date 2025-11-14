@@ -235,13 +235,13 @@ for (int i = 0; i < PI.size(); ++i) { //loop over deduped vectors
     // print minterms as binary (m<index>)
     for (int k = 0; k < coveredMinterms.size(); ++k) {
         int decimal_index = stoi(coveredMinterms[k], nullptr, 2);
-        cout << coveredMinterms[k] << "(m" << decimal_index << "),";
+        cout << coveredMinterms[k] << "(m" << decimal_index << ") ";
     }
 
     // print don't-cares as binary (d<index>)
     for (int k = 0; k < coveredDontCares.size(); ++k) {
         int decimal_index = stoi(coveredDontCares[k], nullptr, 2);
-        cout << coveredDontCares[k] << "(d" << decimal_index << "),";
+        cout << coveredDontCares[k] << "(d" << decimal_index << ") ";
     }
 
     cout << "\n";
