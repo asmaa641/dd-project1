@@ -37,9 +37,9 @@ Minterms out of range
 
 Missing minterm or maxterm entries
 
-🧱 Build Instructions
-
-▶️ How to Run
+🧱 Build Instructions & ▶️ How to Run
+To use the program, first create a text file with three lines: the first line is the number of variables, the second line lists the minterms or maxterms (prefixed by m or M) separated by commas, and the third line lists the don’t-care terms separated by commas. Next, write this file’s name (or absolute path on mac) in the file.open(...) call inside main.cpp so the program can read it.
+Depending on your IDE, make sure that both main.cpp and QM.cpp are included in the compilation process so the program builds and runs correctly.
 
 
 The program loads the appropriate sample input file and prints:
@@ -121,4 +121,4 @@ isCovered(minterm, pi)
 generateVerilog(vector<string>)
 → Prints minimized logic as Verilog assign syntax.
 
-// Note: I used chatgpt to beautify the readme file
+Note: I used chatgpt to beautify the readme file
