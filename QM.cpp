@@ -83,19 +83,17 @@ void QM::createFirstColumn(vector<vector<string>>& groups){
         
     if (minterms.empty() && doNotCares.empty()) return; //nothing there
 
-    int inputSize = !minterms.empty() ? minterms[0].size() : doNotCares[0].size();
-    //get input size by checking the size of the first element
 
     vector<string> allTerms = minterms; // create a vector of all terms to put minterms and dont cares together
     allTerms.insert(allTerms.end(), doNotCares.begin(), doNotCares.end());
 
     groups.clear();
-    groups.resize(inputSize + 1); //making sure the groups vector is ready for use
+    groups.resize(size + 1); //making sure the groups vector is ready for use
 
     for(int i = 0; i < allTerms.size(); i++){ // iterate through each term in allTerms, then iterate through the 0s and 1s in each element
         int onesCount = 0;
         string str = allTerms[i];
-        for (int j = 0; j < inputSize; j++){
+        for (int j = 0; j < size; j++){
             if(str[j] == '1') onesCount++;
         }
         if (onesCount >= 0) {
